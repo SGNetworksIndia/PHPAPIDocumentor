@@ -516,7 +516,10 @@ class PADBase {
 			$host = rtrim($host, ' \t\n\r\0\x0B/');
 			$endpoint = ltrim($endpoint, ' \t\n\r\0\x0B/');
 
-			$url = "$host/$endpoint";
+			if(property_exists($this->config, 'servers')) {
+				$url = '%{PAD_SERVER_URL}%/';
+			} else
+				$url = "$host/$endpoint";
 
 			$method = strtoupper($method);
 			$headers = $reqBody = [
@@ -874,6 +877,11 @@ class PADBase {
 		$html = '';
 		$url = (property_exists($this->config, 'url')) ? $this->config->url : '';
 		$url = rtrim($url, ' \t\n\r\0\x0B/');
+
+		if(property_exists($this->config, 'servers')) {
+			$url = '%{PAD_SERVER_URL}%';
+		}
+
 		$title = $description = $apiType = $apiEndpoint = '';
 		$apiExample = $apiBody = $apiHeader = $apiGroup = $apiSuccessExample = $apiErrorExample = null;
 		$i = 0;
@@ -1137,7 +1145,13 @@ class PADBase {
 		$content = $this->apiContent;
 		$groupPath = $this->apiGroups;
 
-		$html = '<main class="pad-content">';
+		$projectName = (property_exists($this->config,'name')) ? $this->config->name : 'PHPAPIDocumentor';
+		$year = date('Y');
+
+		$html = '<header>';
+		$html .= "<div class='logo'>$projectName</div>";
+		$html .= '</header>';
+		$html .= '<main class="pad-content">';
 		$html .= '<article class="contents">';
 		$chain = [];
 		foreach($content as $k => $apidoc) {
@@ -1149,8 +1163,56 @@ class PADBase {
 		$html .= $this->getSectionsHTML($chain, $content, false);
 		$html .= '</article>';
 		$html .= '</main>';
+		$html .= '<footer>';
+			if(!empty($projectName))
+				$html .= "<div class='pad-copyright'>Copyright &copy; $projectName $year. All rights reserved.</div>";
+			$html .= "<div class='pad-credits'>";
+				$html .= "<strong>Powered By: </strong> <a href='https://phpapidoc.eu.org/'>PHPAPIDocumentor</a>";
+			$html .= '</div>';
+		$html .= '</footer>';
 
 		return $html;
+	}
+
+	private function getBaseJavascriptDynamicServerConfiguration(): string {
+		return <<<SCRIPT
+$(function() {
+	\$section = $('.pad-content .pad-has-content');
+	let serverGroup, serverHost, serverURL, isServerHTTP2, count = padServers.length;
+
+	$.each(padServers, function(i, server) {
+		const host = server.host;
+		if(host === window.location.hostname) {
+			serverGroup = padServers[i];
+			serverHost = serverGroup.host;
+			serverURL = `\${serverGroup.protocol}://\${serverGroup.host}`;
+			isServerHTTP2 = serverGroup.http2
+			init();
+		} else if(!--count) {
+			console.log('This documentation cannot be here. No hosts matched!');
+			if(window.location.hostname === '') {
+				serverGroup = padServers.development;
+				serverHost = serverGroup.host;
+				serverURL = `\${serverGroup.protocol}://\${serverGroup.host}`;
+				isServerHTTP2 = serverGroup.http2
+				init();
+			} else {
+				$('article, nav').remove();
+			}
+		}
+	});
+
+	function init() {
+		\$section.each(function() {
+			const \$this = $(this);
+			let html = \$this.html();
+			let rhtml = html.replace(/%{PAD_SERVER_URL}%/gmi, serverURL);
+			\$this.html(rhtml);
+		});
+	}
+});
+
+SCRIPT;
 	}
 
 	/**
@@ -1185,6 +1247,61 @@ class PADBase {
 
 	public function getArgument(string $arg): string {
 		return (array_key_exists($arg, $this->args)) ? $this->args[$arg] : "";
+	}
+
+	public function generateHTMLDocumentation() {
+		$outputDir = $this->getArgument('output');
+		$sidebarHTML = $this->getSidebar();
+		$html = $this->getContent();
+
+		$title = $this->getConfig('title');
+
+
+		$htmlContent = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>$title</title>
+		<link rel="stylesheet" type="text/css" href="assets/plugins/bootstrap/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="assets/plugins/prism/prism.css">
+		<link rel="stylesheet" type="text/css" href="assets/css/base.css">
+	</head>
+	<body>
+		$sidebarHTML
+		
+		$html
+		
+		<script type="text/javascript" src="assets/plugins/jquery.min.js"></script>
+		<script type="text/javascript" src="assets/plugins/prism/prism.js"></script>
+		<script type="text/javascript" src="assets/plugins/bootstrap/bootstrap.bundle.min.js"></script>
+		<script type="text/javascript" src="assets/js/base.js"></script>
+	</body>
+</html>
+
+HTML;
+
+		$outputHTML = "{$outputDir}index.html";
+		if(file_put_contents($outputHTML, $htmlContent)) {
+			$outputHTML = 'file:///' . str_replace('\\', '/', $outputHTML);
+			$assetsOutputDir = "{$outputDir}assets";
+			if(xcopy("phar://pad.phar/assets", $assetsOutputDir)) {
+				if(property_exists($this->config, 'servers')) {
+					$baseJSFilePath = realpath("$assetsOutputDir/js/base.js");
+					$json = json_encode($this->config->servers, JSON_NUMERIC_CHECK|JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+					$json = str_replace('    ', "\t", $json);
+					$jsContent = "\nconst padServers = $json;\n" . $this->getBaseJavascriptDynamicServerConfiguration();
+
+					if(!$bytesWritten = file_put_contents($baseJSFilePath, $jsContent, FILE_APPEND|LOCK_EX))
+						colorLog("Couldn't write to the base javascript file: $baseJSFilePath",'w');
+				}
+				colorLog("The API Documentation is generated and stored in $outputHTML file.", 's');
+			} else {
+				colorLog("Failed to copy the assets required for the API Documentation.", 'e');
+				unlink($outputHTML);
+			}
+		} else {
+			colorLog("Failed to generate the API Documentation.", 'e');
+		}
 	}
 
 }

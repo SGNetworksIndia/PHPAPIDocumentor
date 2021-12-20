@@ -118,3 +118,53 @@ function sync() {
 
 }
 
+
+
+
+const padServers = {
+	"development": {
+		"http2": true,
+		"protocol": "https",
+		"host": "sample.dev.padocs.com"
+	},
+	"production": {
+		"http2": true,
+		"protocol": "https",
+		"host": "sample.prod.padocs.com"
+	}
+};
+$(function() {
+	$section = $('.pad-content .pad-has-content');
+	let serverGroup, serverHost, serverURL, isServerHTTP2, count = padServers.length;
+
+	$.each(padServers, function(i, server) {
+		const host = server.host;
+		if(host === window.location.hostname) {
+			serverGroup = padServers[i];
+			serverHost = serverGroup.host;
+			serverURL = `${serverGroup.protocol}://${serverGroup.host}`;
+			isServerHTTP2 = serverGroup.http2
+			init();
+		} else if(!--count) {
+			console.log('This documentation cannot be here. No hosts matched!');
+			if(window.location.hostname === '') {
+				serverGroup = padServers.development;
+				serverHost = serverGroup.host;
+				serverURL = `${serverGroup.protocol}://${serverGroup.host}`;
+				isServerHTTP2 = serverGroup.http2
+				init();
+			} else {
+				$('article, nav').remove();
+			}
+		}
+	});
+
+	function init() {
+		$section.each(function() {
+			const $this = $(this);
+			let html = $this.html();
+			let rhtml = html.replace(/%{PAD_SERVER_URL}%/gmi, serverURL);
+			$this.html(rhtml);
+		});
+	}
+});

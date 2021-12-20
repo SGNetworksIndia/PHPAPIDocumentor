@@ -12,6 +12,10 @@ body {
 	font-family: "Roboto", sans-serif;
 }
 
+body a {
+	text-decoration: none;
+}
+
 main {
 	margin: 2em 2em 2em 17em;
 }
@@ -103,10 +107,10 @@ main {
 
 
 .line-numbers .line-numbers-rows {
-	 top: -1.5rem;
-	 padding-top: 1.5rem;
-	 padding-bottom: 1.5rem;
- }
+	top: -1.5rem;
+	padding-top: 1.5rem;
+	padding-bottom: 1.5rem;
+}
 
 
 .contents > .pad-no-content {
@@ -181,4 +185,70 @@ main {
 	align-items: center;
 	justify-content: center;
 }
+
+
+header,
+footer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: .5rem;
+	width: 100%;
+
+	z-index: 1;
+}
+
+header {
+	justify-content: start;
+	padding: .5rem 3rem;
+
+	background-color: hsla(0, 0%, 100%, 1);
+	border-bottom: 1px solid hsl(0, 0%, 80%);
+	box-shadow: 0 0 1rem .5rem hsla(0, 0%, 0%, .2);
+
+	position: fixed;
+	top: 0;
+}
+
+header > .logo {
+	font-size: 2rem;
+	font-weight: bold;
+	color: #ff00cc;
+}
+
+footer {
+	color: hsl(0, 0%, 50%);
+	background-color: hsl(0, 0%, 90%);
+	border-top: 1px solid hsl(0, 0%, 80%);
+	position: relative;
+	bottom: 0;
+}
+
+footer > .pad-copyright {
+
+}
+
+footer > .pad-copyright ~ .pad-credits {
+	border-left: 1px solid hsl(0, 0%, 80%);
+	margin-left: 1rem;
+	padding-left: 1rem;
+}
+
+footer > .pad-credits {
+
+}
+
+
+
+@supports (-webkit-text-fill-color: transparent) and (background-clip: text) {
+	header > .logo {
+		background: #ff00cc; /* fallback for old browsers */
+		background: -webkit-linear-gradient(to right, #ff00cc, #333399); /* Chrome 10-25, Safari 5.1-6 */
+		background: linear-gradient(to right, #ff00cc, #333399); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+}
+
 
