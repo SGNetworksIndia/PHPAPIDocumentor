@@ -1,0 +1,1 @@
+PHPAPIDocumentor is an application used to create HTML Documentation page for API end-points by analyzing DocBlock comments. PHPAPIDocumentor can be used with any language which supports DocBlock comments.
