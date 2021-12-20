@@ -18,7 +18,7 @@
 	},
 	"http2": true,
 	"input": "D:\\Projects\\PHP8.1.0\\PHPAPIDocumentor\\sample",
-	"output": "D:\\Projects\\PHP8.1.0\\PHPAPIDocumentor\\sample\\padocs",
+	"output": "D:\\Projects\\PHP8.1.0\\PHPAPIDocumentor\\sample\\docs",
 	"bin": "D:\\Projects\\PHP8.1.0\\PHPAPIDocumentor\\sample\\_apidoc.ts",
 	"filters": {
 		"excludes": {
