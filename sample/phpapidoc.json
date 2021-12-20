@@ -1,0 +1,31 @@
+{
+	"name": "PHPAPIDocumentor",
+	"version": "1.0.1",
+	"description": "Sample PHP API Documentation",
+	"title": "Sample PHP API Documentation",
+	"url": "https://sample.padocs.com",
+	"servers": {
+		"development": {
+			"http2": true,
+			"protocol": "https",
+			"host": "sample.dev.padocs.com"
+		},
+		"production": {
+			"http2": true,
+			"protocol": "https",
+			"host": "sample.prod.padocs.com"
+		}
+	},
+	"http2": true,
+	"input": "D:\\Projects\\PHP8.1.0\\PHPAPIDocumentor\\sample",
+	"output": "D:\\Projects\\PHP8.1.0\\PHPAPIDocumentor\\sample\\padocs",
+	"bin": "D:\\Projects\\PHP8.1.0\\PHPAPIDocumentor\\sample\\_apidoc.ts",
+	"filters": {
+		"excludes": {
+			"extensions" : []
+		},
+		"includes": {
+			"extensions" : ["php"]
+		}
+	}
+}
